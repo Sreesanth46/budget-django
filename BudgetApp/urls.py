@@ -5,7 +5,7 @@ from BudgetApp.settings import base as settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('BudgetApp.apps.core.urls')),
+    path('', include('BudgetApp.apps.user_management_app.urls')),
 ]
 
 if settings.DEBUG:
