@@ -23,7 +23,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'BudgetApp.apps.core',
+    'BudgetApp.apps.user_management_app',
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -126,5 +128,12 @@ STATIC_URL = "/static/"
 # FIRST-PARTY SETTINGS
 # ==============================================================================
 BUDGETAPP_ENVIRONMENT = config("BUDGETAPP_ENVIRONMENT", default="local")
+
 ACCESS_TOKEN_SECRET = config("ACCESS_TOKEN_SECRET", default="ACCESSS_TOKEN_SECRET-DEFAULT")
+ACCESS_TOKEN_EXPIRY_MINUTES = config("ACCESS_TOKEN_EXPIRY_MINUTES", default=60)
+
 REFRESH_TOKEN_SECRET = config("REFRESH_TOKEN_SECRET", default="REFRESH_TOKEN_SECRET-DEFAULT")
+REFRESH_TOKEN_EXPIRY_HOURS = config("REFRESH_TOKEN_EXPIRY_HOURS", default=1)
+
+MAIL_TOKEN_SECRET = config("MAIL_TOKEN_SECRET", default="MAIL_TOKEN_SECRET-DEFAULT")
+MAIL_TOKEN_EXPIRY_MINUTES = config("REFRESH_TOKEN_EXPIRY_HOURS", default=30)
