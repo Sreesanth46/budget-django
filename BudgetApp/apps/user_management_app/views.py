@@ -7,9 +7,9 @@ from rest_framework.decorators import api_view
 from BudgetApp.settings import base as settings
 from BudgetApp.apps.core.serializers.user_serializer import UserSerializer
 
-def generate_token(payload, expiration_minutes, secret):
+def generate_token(payload, expiration_delta, secret):
     now = datetime.datetime.utcnow()
-    expiration_time = now + datetime.timedelta(minutes=expiration_minutes)
+    expiration_time = now + expiration_delta
     token_payload = {
         **payload,
         'exp': expiration_time,
@@ -18,14 +18,26 @@ def generate_token(payload, expiration_minutes, secret):
     return jwt.encode(token_payload, secret, algorithm='HS256')
 
 def generate_access_token(payload):
-    return generate_token(payload, settings.ACCESS_TOKEN_EXPIRY_MINUTES, settings.ACCESS_TOKEN_SECRET)
+    return generate_token(
+        payload,
+        datetime.timedelta(minutes = settings.ACCESS_TOKEN_EXPIRY_MINUTES),
+        settings.ACCESS_TOKEN_SECRET
+    )
 
 
 def generate_refresh_token(payload):
-    return generate_token(payload, settings.REFRESH_TOKEN_EXPIRY_HOURS * 24 * 60, settings.REFRESH_TOKEN_SECRET)
+    return generate_token(
+        payload,
+        datetime.timedelta(hours = settings.REFRESH_TOKEN_EXPIRY_HOURS),
+        settings.REFRESH_TOKEN_SECRET
+    )
 
 def generate_mail_token(payload):
-    return generate_token(payload, settings.MAIL_TOKEN_EXPIRY_MINUTES, settings.MAIL_TOKEN_SECRET)
+    return generate_token(
+        payload,
+        datetime.timedelta(minutes = settings.MAIL_TOKEN_EXPIRY_MINUTES),
+        settings.MAIL_TOKEN_SECRET
+    )
 
 def generate_access_refresh_token(payload):
     access_token = generate_access_token(payload)
@@ -35,11 +47,11 @@ def generate_access_refresh_token(payload):
 
 def decode_token(token, secret):
     try:
-        return jwt.decode(token, secret, algorithms='HS256')
+        decoded = jwt.decode(token, secret, algorithms='HS256')
     except jwt.ExpiredSignatureError:
-        return {"token_expired": True}
-    except Exception as e:
         return None
+    
+    return decoded
 
 @api_view(['POST'])
 def register_user(request):
@@ -59,7 +71,7 @@ def verify_email(request):
     token = request.GET.get('token')
     token_details = decode_token(token, settings.MAIL_TOKEN_EXPIRY_MINUTES)
 
-    if "token_expired" in token_details:
+    if not token_details:
         return Response("Token expired", status=status.HTTP_400_BAD_REQUEST)
     
     response = {
