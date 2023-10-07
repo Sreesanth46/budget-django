@@ -110,7 +110,16 @@ def login(request):
 
     if not password_matches:
         return Response("Invalid username or password", status=status.HTTP_400_BAD_REQUEST)
-
+    
     serializer = UserSerializer(user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    access_token, refresh_token = generate_access_refresh_token(serializer.data)
+
+    response_data = {
+        "accessToken": access_token,
+        "refreshToken": refresh_token,
+        **serializer.data
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
     
