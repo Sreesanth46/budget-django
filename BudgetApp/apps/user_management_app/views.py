@@ -122,4 +122,8 @@ def login(request):
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def verify_access_token(request):
+    return Response(request.user, status=status.HTTP_200_OK)
     
