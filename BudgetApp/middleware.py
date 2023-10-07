@@ -1,12 +1,11 @@
 from typing import Any
 import jwt
+from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.response import Response
 
 from BudgetApp import settings
 
 class Authentication(object):
-
     def __init__(self, get_response) -> None:
         self.response = get_response
 
@@ -15,9 +14,10 @@ class Authentication(object):
             return self.get_response(request)
         
         elif not request.headers.get('Authorization'):
-            return Response(
-                "message: Unauthorized - Access token is required",
-                status = status.HTTP_401_UNAUTHORIZED
+            return JsonResponse(
+                {"message" : "Unauthorized - Access token is required"},
+                status = status.HTTP_401_UNAUTHORIZED,
+                safe=False
             )
         
 
@@ -32,12 +32,12 @@ class Authentication(object):
                 "message" : "Token expired",
                 "errorCode" : "401"
             }
-            return Response(
+            return JsonResponse(
                 response_data,
                 status = status.HTTP_401_UNAUTHORIZED
             )
         except jwt.InvalidTokenError:
-            return Response(
+            return JsonResponse(
                 {"message" : "Invalid token"},
                 status = status.HTTP_401_UNAUTHORIZED
             )
