@@ -3,6 +3,7 @@ import jwt
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from BudgetApp.apps.core.models.user_model import UserModel
 
 from BudgetApp.settings import base as settings
 from BudgetApp.apps.core.serializers.user_serializer import UserSerializer
@@ -50,6 +51,8 @@ def decode_token(token, secret):
         decoded = jwt.decode(token, secret, algorithms='HS256')
     except jwt.ExpiredSignatureError:
         return None
+    except jwt.InvalidTokenError:
+        return None
     
     return decoded
 
@@ -82,13 +85,32 @@ def verify_email(request):
 
 @api_view(['POST'])
 def sign_up(request):
+    user_exists = UserModel.objects.filter(email=request.data.get('email')).exists()
+    
+    if user_exists:
+        return Response("User already exists", status=status.HTTP_400_BAD_REQUEST)
+
     serializer = UserSerializer(data=request.data)
 
-    if serializer.is_valid():
-        serializer.save()
-        return Response("Sign up successfull", status=status.HTTP_201_CREATED)
-    else:
-        return Response("Sign up unsuccessfull", status=status.HTTP_400_BAD_REQUEST)
+    if not serializer.is_valid():
+        return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
 
-    
+    serializer.save()
+    response_data = serializer.data
+    return Response(response_data, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def login(request):
+    try:
+        user = UserModel.objects.get(email = request.data.get('email'))
+    except UserModel.DoesNotExist:
+        return Response("Invalid username or password", status=status.HTTP_400_BAD_REQUEST)
+
+    password_matches = user.check_password(request.data.get('password'))
+
+    if not password_matches:
+        return Response("Invalid username or password", status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
     
